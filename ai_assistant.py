@@ -28,30 +28,28 @@ class AIAnalysis:
 
 class AIAssistant:
     """Помощник с искусственным интеллектом для работы со сметами на базе GigaChat"""
-    
+
     def __init__(self, config: Config):
         self.config = config
-        self.enabled = config.ai_enabled
+        self.giga = None
         
-        if self.enabled:
+        if config.is_ai_available:
             try:
-                self.model = config.gigachat_model
                 self.giga = GigaChat(
                     credentials=config.gigachat_credentials,
                     scope=config.gigachat_scope,
-                    model=self.model,
+                    model=config.gigachat_model,
                     verify_ssl_certs=False
                 )
-                logger.info(f"ИИ-помощник инициализирован с моделью {self.model}")
+                logger.info(f"ИИ-помощник инициализирован с моделью {config.gigachat_model}")
             except Exception as e:
                 logger.error(f"Ошибка инициализации GigaChat: {e}")
-                self.enabled = False
         else:
             logger.warning("ИИ-помощник отключен")
     
     def is_enabled(self) -> bool:
         """Проверка доступности ИИ"""
-        return self.enabled
+        return self.giga is not None
     
     def generate_estimate_items(self, project_description: str, project_type: str = "общий") -> List[EstimateItem]:
         """
@@ -64,7 +62,7 @@ class AIAssistant:
         Returns:
             Список позиций сметы
         """
-        if not self.enabled:
+        if not self.is_enabled():
             logger.warning("🤖 ИИ-помощник отключен - генерация невозможна")
             return []
         
@@ -75,7 +73,7 @@ class AIAssistant:
         
         try:
             prompt = f"""
-            Ты - эксперт по созданию смет для IT-проектов. На основе описания проекта создай детальную смету.
+            Ты - эксперт по созданию смет для любых проектов. На основе описания проекта создай детальную смету.
             
             Описание проекта: {project_description}
             Тип проекта: {project_type}
@@ -87,15 +85,14 @@ class AIAssistant:
             - description: краткое описание работы
             
             Учти:
-            - Рыночные расценки на 2024 год для России
-            - Все этапы разработки (анализ, дизайн, разработка, тестирование, деплой)
+            - Рыночные расценки на 2025 год для России
+            - Все этапы
             - Возможные риски и дополнительные работы
-            - Средняя ставка: junior 1500-2500₽/ч, middle 2500-4000₽/ч, senior 4000-6000₽/ч
             
             Ответь только валидным JSON массивом объектов.
             """
             
-            logger.info(f"📤 Отправляю запрос к GigaChat (модель: {self.model})")
+            logger.info(f"📤 Отправляю запрос к GigaChat (модель: {self.config.gigachat_model})")
             logger.debug(f"🔤 Размер промпта: {len(prompt)} символов")
             
             messages = [{"role": "user", "content": prompt}]
@@ -158,7 +155,7 @@ class AIAssistant:
         Returns:
             Анализ и рекомендации
         """
-        if not self.enabled:
+        if not self.is_enabled():
             logger.warning("🤖 ИИ-помощник отключен - анализ невозможен")
             return AIAnalysis([], [], [], {})
         
@@ -270,7 +267,7 @@ class AIAssistant:
         Returns:
             Ответ ИИ-консультанта
         """
-        if not self.enabled:
+        if not self.is_enabled():
             logger.warning("🤖 ИИ-помощник отключен - консультация невозможна")
             return "К сожалению, ИИ-консультант недоступен. Проверьте настройки GIGACHAT_CREDENTIALS."
         
@@ -332,7 +329,7 @@ class AIAssistant:
         Returns:
             Категория работы
         """
-        if not self.enabled:
+        if not self.is_enabled():
             logger.debug("🤖 ИИ-помощник отключен - используем категорию по умолчанию")
             return "Общее"
         
@@ -383,7 +380,7 @@ class AIAssistant:
         Returns:
             Список предложений
         """
-        if not self.enabled or not existing_templates:
+        if not self.is_enabled() or not existing_templates:
             return []
         
         try:
