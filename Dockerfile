@@ -1,4 +1,4 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 # Устанавливаем рабочую директорию
 WORKDIR /app
@@ -17,10 +17,6 @@ RUN mkdir -p /app/data
 RUN adduser --disabled-password --gecos '' botuser && \
     chown -R botuser:botuser /app
 USER botuser
-
-# Указываем переменные окружения по умолчанию
-ENV DATABASE_URL=sqlite:///app/data/estimates.db
-ENV LOG_LEVEL=INFO
 
 # Запускаем бота
 CMD ["python", "bot.py"] 

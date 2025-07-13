@@ -1,3 +1,6 @@
+"""
+Конфигурация бота
+"""
 import os
 import logging
 from dataclasses import dataclass
@@ -12,7 +15,10 @@ def setup_logging(log_level: str = "INFO") -> None:
     level = getattr(logging, log_level.upper(), logging.INFO)
     logging.basicConfig(
         level=level,
-        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.StreamHandler(),
+        ]
     )
 
 
@@ -46,7 +52,10 @@ class Config:
 
         config = cls(
             bot_token=get_env("BOT_TOKEN", required=True),
-            database_url=get_env("DATABASE_URL", "postgresql://bot_user:bot_password@localhost:5432/estimates_db"),
+            database_url=get_env(
+                "DATABASE_URL", 
+                "postgresql://bot_user:bot_password@localhost:5432/estimates_db"
+            ),
             log_level=get_env("LOG_LEVEL", "INFO"),
             gigachat_credentials=get_env("GIGACHAT_CREDENTIALS", ""),
             gigachat_model=get_env("GIGACHAT_MODEL", "GigaChat"),
@@ -72,7 +81,10 @@ class Config:
             raise ValueError("DATABASE_URL не может быть пустым")
         
         if self.ai_enabled and not self.gigachat_credentials:
-            logger.warning("AI_ENABLED=true, но GIGACHAT_CREDENTIALS не установлен. ИИ-функции будут отключены.")
+            logger.warning(
+                "AI_ENABLED=true, но GIGACHAT_CREDENTIALS не установлен. "
+                "ИИ-функции будут отключены."
+            )
         
         logger.info("Конфигурация валидна")
 

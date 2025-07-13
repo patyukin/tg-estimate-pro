@@ -113,4 +113,29 @@ COMMENT ON COLUMN work_templates.default_cost IS 'Стоимость по умо
 COMMENT ON COLUMN work_templates.category IS 'Категория работ';
 COMMENT ON COLUMN work_templates.usage_count IS 'Количество использований шаблона';
 
+-- Таблица настроек пользователей
+CREATE TABLE IF NOT EXISTS user_settings (
+    id SERIAL PRIMARY KEY,
+    user_id INTEGER UNIQUE NOT NULL,
+    default_hourly_rate DECIMAL(10,2),
+    timezone VARCHAR(50) DEFAULT 'UTC',
+    language VARCHAR(10) DEFAULT 'ru',
+    notifications_enabled BOOLEAN DEFAULT TRUE,
+    ai_assistance_enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    
+    -- Внешний ключ
+    FOREIGN KEY (user_id) REFERENCES users (id) ON DELETE CASCADE
+);
+
+-- Комментарии к таблице настроек
+COMMENT ON TABLE user_settings IS 'Настройки пользователей бота';
+COMMENT ON COLUMN user_settings.user_id IS 'ID пользователя из таблицы users';
+COMMENT ON COLUMN user_settings.default_hourly_rate IS 'Почасовая ставка по умолчанию';
+COMMENT ON COLUMN user_settings.timezone IS 'Часовой пояс пользователя';
+COMMENT ON COLUMN user_settings.language IS 'Язык интерфейса';
+COMMENT ON COLUMN user_settings.notifications_enabled IS 'Включены ли уведомления';
+COMMENT ON COLUMN user_settings.ai_assistance_enabled IS 'Включена ли помощь ИИ';
+
 \echo 'Таблицы созданы успешно'; 
